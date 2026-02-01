@@ -1,38 +1,52 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingCart, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Loader2, AlertCircle } from 'lucide-react';
 import { shortenService } from '../services/shortenService';
 
 export const RedirectPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [error, setError] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     const performRedirect = async () => {
+      // 1. Kiểm tra Slug
       if (!slug) {
         setError('Mã liên kết không hợp lệ.');
         return;
       }
 
       try {
+        // 2. Gọi API
         const response = await shortenService.getOriginalUrl(slug);
-        if (response.success && response.url) {
-          // Delay a tiny bit for UI experience
+        
+        console.log("API Response:", response); // Debug: Xem log để biết API trả về gì
+
+        // 3. Logic kiểm tra lỏng (Chấp nhận cả url, affiliateUrl hoặc longUrl)
+        // Chỉ cần tìm thấy 1 chuỗi link là chuyển hướng ngay
+        const targetUrl = response.url || response.affiliateUrl || response.longUrl;
+
+        if (targetUrl) {
+          setIsRedirecting(true);
+          // Delay nhỏ để hiển thị hiệu ứng loading đẹp mắt
           setTimeout(() => {
-            window.location.replace(response.url as string);
+            window.location.replace(targetUrl);
           }, 1500);
         } else {
-          setError(response.message || 'Liên kết này không tồn tại hoặc đã hết hạn.');
+          // Trường hợp API trả về thành công nhưng không tìm thấy slug
+          setError('Liên kết này không tồn tại hoặc đã bị xóa.');
         }
+
       } catch (err) {
-        setError('Có lỗi xảy ra khi xử lý liên kết.');
+        console.error("Redirect Error:", err);
+        setError('Không thể kết nối đến máy chủ dữ liệu.');
       }
     };
 
     performRedirect();
   }, [slug]);
 
+  // --- GIAO DIỆN LỖI ---
   if (error) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center p-4">
@@ -53,6 +67,7 @@ export const RedirectPage: React.FC = () => {
     );
   }
 
+  // --- GIAO DIỆN LOADING ---
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full text-center">
@@ -65,7 +80,7 @@ export const RedirectPage: React.FC = () => {
         </div>
 
         <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
-          Đang kết nối...
+          {isRedirecting ? 'Tìm thấy sản phẩm!' : 'Đang kết nối...'}
         </h2>
         
         <p className="text-gray-600 mb-8 font-medium">
