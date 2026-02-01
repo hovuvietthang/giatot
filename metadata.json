@@ -1,0 +1,5 @@
+{
+  "name": "Affiliate Link Shortener",
+  "description": "Một ứng dụng rút gọn link chuyên nghiệp dành cho các nhà tiếp thị liên kết (Affiliate Marketer), tích hợp với Google Apps Script để quản lý dữ liệu và bóc tách link Shopee/Lazada.",
+  "requestFramePermissions": []
+}
